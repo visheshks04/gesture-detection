@@ -8,6 +8,7 @@ class Controller:
 
     def __init__(self):
         self.detector = HandsDetector()
+        self.volume_lock_switch = False
 
     def set_volume(self, distance, distance_at_min_volume=25, distance_at_max_volume=270):
         
@@ -16,11 +17,16 @@ class Controller:
             volume_status = 100
         if volume_status<0:
             volume_status = 0
+        
+        if self.volume_lock_switch:
+            if sys.platform == 'linux2' or sys.platform == 'linux':
+                os.system(f"amixer -D pulse sset Master {volume_status}%")
+            elif sys.platform == 'win32':
+                os.system(f'nircmd.exe setsysvolume {volume_status/100 * 65535}')
 
-        if sys.platform == 'linux2' or sys.platform == 'linux':
-            os.system(f"amixer -D pulse sset Master {volume_status}%")
-        elif sys.platform == 'win32':
-            os.system(f'nircmd.exe setsysvolume {volume_status/100 * 65535}')
+    def volume_lock(self, distance, threshold=40):
+        if distance<threshold:
+            self.volume_lock_switch = not self.volume_lock_switch # NEEDS FIXING
 
 if __name__ == '__main__':
 
